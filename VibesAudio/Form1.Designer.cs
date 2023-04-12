@@ -34,6 +34,7 @@
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.buttonEqualizer = new System.Windows.Forms.Button();
             this.buttonPlayer = new System.Windows.Forms.Button();
+            this.panel3 = new System.Windows.Forms.Panel();
             this.panelMain = new System.Windows.Forms.Panel();
             this.panelCover = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
@@ -41,17 +42,16 @@
             this.panelName = new System.Windows.Forms.Panel();
             this.labelNaming = new System.Windows.Forms.Label();
             this.panelNavigation = new System.Windows.Forms.Panel();
+            this.buttonRepeat = new System.Windows.Forms.Button();
             this.labelVolume = new System.Windows.Forms.Label();
             this.trackBarVolume = new System.Windows.Forms.TrackBar();
             this.labelMaxPos = new System.Windows.Forms.Label();
             this.labelCurrentPos = new System.Windows.Forms.Label();
             this.trackBarMusicPos = new System.Windows.Forms.TrackBar();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.buttonRepeat = new System.Windows.Forms.Button();
             this.buttonStop = new System.Windows.Forms.Button();
             this.buttonMute = new System.Windows.Forms.Button();
             this.buttonPlayPause = new System.Windows.Forms.Button();
-            this.panel3 = new System.Windows.Forms.Panel();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.sideBar.SuspendLayout();
             this.panelMain.SuspendLayout();
             this.panelCover.SuspendLayout();
@@ -87,6 +87,8 @@
             this.comboBox1.Size = new System.Drawing.Size(200, 21);
             this.comboBox1.Sorted = true;
             this.comboBox1.TabIndex = 7;
+            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
+            this.comboBox1.Click += new System.EventHandler(this.comboBox1_Click);
             // 
             // buttonEqualizer
             // 
@@ -117,6 +119,16 @@
             this.buttonPlayer.Text = "Player";
             this.buttonPlayer.UseVisualStyleBackColor = true;
             this.buttonPlayer.Click += new System.EventHandler(this.buttonPlayer_Click);
+            // 
+            // panel3
+            // 
+            this.panel3.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("panel3.BackgroundImage")));
+            this.panel3.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.panel3.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel3.Location = new System.Drawing.Point(0, 0);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(200, 175);
+            this.panel3.TabIndex = 1;
             // 
             // panelMain
             // 
@@ -204,6 +216,21 @@
             this.panelNavigation.Size = new System.Drawing.Size(589, 126);
             this.panelNavigation.TabIndex = 3;
             // 
+            // buttonRepeat
+            // 
+            this.buttonRepeat.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonRepeat.BackColor = System.Drawing.Color.Transparent;
+            this.buttonRepeat.BackgroundImage = global::VibesAudio.Properties.Resources.repeat;
+            this.buttonRepeat.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.buttonRepeat.FlatAppearance.BorderSize = 0;
+            this.buttonRepeat.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.buttonRepeat.Location = new System.Drawing.Point(323, 58);
+            this.buttonRepeat.Name = "buttonRepeat";
+            this.buttonRepeat.Size = new System.Drawing.Size(30, 30);
+            this.buttonRepeat.TabIndex = 14;
+            this.buttonRepeat.UseVisualStyleBackColor = false;
+            this.buttonRepeat.Click += new System.EventHandler(this.buttonRepeat_Click);
+            // 
             // labelVolume
             // 
             this.labelVolume.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -268,26 +295,6 @@
             this.trackBarMusicPos.MouseDown += new System.Windows.Forms.MouseEventHandler(this.trackBarMusicPos_MouseDown);
             this.trackBarMusicPos.MouseUp += new System.Windows.Forms.MouseEventHandler(this.trackBarMusicPos_MouseUp);
             // 
-            // timer1
-            // 
-            this.timer1.Enabled = true;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
-            // 
-            // buttonRepeat
-            // 
-            this.buttonRepeat.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonRepeat.BackColor = System.Drawing.Color.Transparent;
-            this.buttonRepeat.BackgroundImage = global::VibesAudio.Properties.Resources.repeat;
-            this.buttonRepeat.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            this.buttonRepeat.FlatAppearance.BorderSize = 0;
-            this.buttonRepeat.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonRepeat.Location = new System.Drawing.Point(323, 58);
-            this.buttonRepeat.Name = "buttonRepeat";
-            this.buttonRepeat.Size = new System.Drawing.Size(30, 30);
-            this.buttonRepeat.TabIndex = 14;
-            this.buttonRepeat.UseVisualStyleBackColor = false;
-            this.buttonRepeat.Click += new System.EventHandler(this.buttonRepeat_Click);
-            // 
             // buttonStop
             // 
             this.buttonStop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -332,15 +339,10 @@
             this.buttonPlayPause.UseVisualStyleBackColor = true;
             this.buttonPlayPause.Click += new System.EventHandler(this.buttonPlayPause_Click);
             // 
-            // panel3
+            // timer1
             // 
-            this.panel3.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("panel3.BackgroundImage")));
-            this.panel3.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            this.panel3.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panel3.Location = new System.Drawing.Point(0, 0);
-            this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(200, 175);
-            this.panel3.TabIndex = 1;
+            this.timer1.Enabled = true;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // Form1
             // 

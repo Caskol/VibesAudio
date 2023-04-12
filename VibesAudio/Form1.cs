@@ -19,7 +19,7 @@ namespace VibesAudio
         private int lastVolume;
         private bool stopUpdate;
         private int length; //переменная для хранения длительности трека в секундах
-        int deviceIndexChanged = 0;
+        bool firstComboBoxInitialization = false;
         private bool repeat = false;
         private string fileName;
         EQ equalizerWindow;
@@ -27,6 +27,10 @@ namespace VibesAudio
         {
             InitializeComponent();
         }
+        /// <summary>
+        /// Функция для полного управления функциями плеера по паузе и старту (смена иконок, изменение переменных). Использовать это вместо встроенных в библиотеку методов Play() и Pause()!
+        /// Play and Pause method for player. Use this instead of library's Play() and Pause() methods. Includes changes to icons in player and boolean variables.
+        /// </summary>
         private void PlayOrPause()
         {
             if (_isPlaying)
@@ -157,7 +161,7 @@ namespace VibesAudio
                             _musicPlayer.Open(fileName, currentDevice); //открываем звуковую дорожку
                         }
                         labelNaming.Text = Path.GetFileName(fileName);
-                        this.Text = "VibesAudio: " + Path.GetFileName(fileName);
+                        this.Text = "VibesAudio: " + labelNaming.Text;
                         try
                         {
                             TagLib.File file_TAG = TagLib.File.Create(fileName);
@@ -273,8 +277,9 @@ namespace VibesAudio
                         _musicPlayer.Open(fileData[0], currentDevice); //открываем звуковую дорожку
                     }
                 }
-                labelNaming.Text = Path.GetFileName(fileData[0]); //показ названия файла в главной панели
-                this.Text = "VibesAudio: " + Path.GetFileName(fileData[0]);//показ названия файла в заголовке окна
+                fileName = fileData[0];
+                labelNaming.Text = Path.GetFileName(fileName); //показ названия файла в главной панели
+                this.Text = "VibesAudio: " + labelNaming.Text;//показ названия файла в заголовке окна
                 try
                 {
                     TagLib.File file_TAG = TagLib.File.Create(fileData[0]);
@@ -369,13 +374,13 @@ namespace VibesAudio
         }
         private void comboBox1_Click(object sender, EventArgs e)
         {
-            _musicPlayer.Volume = 0;
-            _musicPlayer.Pause();
+            PlayOrPause();
+            //_musicPlayer.Volume = 0;
+            //_musicPlayer.Pause();
         }
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            deviceIndexChanged++;
-            if (deviceIndexChanged > 1) // device index gets changed once before the form loads, so check for this.
+            if (firstComboBoxInitialization == true) //если combobox изменяется руками пользователя, а не при первичной инициализации (if combobox did changed from user and not by the program first initialization)
             {
                 List<string> deviceId;
                 string selectedDeviceName = comboBox1.SelectedItem.ToString();
@@ -404,6 +409,17 @@ namespace VibesAudio
                     MessageBox.Show("No device IDs found for selected device name.");
                 }
             }
+            else
+                firstComboBoxInitialization = true;
+        }
+        /// <summary>
+        /// Запуск воспроизведения аудио при закрытии
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void comboBox1_DropDownClosed(object sender, EventArgs e)
+        {
+            PlayOrPause();
         }
     }
 }

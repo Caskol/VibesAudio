@@ -88,6 +88,7 @@
             this.comboBox1.Sorted = true;
             this.comboBox1.TabIndex = 7;
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
+            this.comboBox1.DropDownClosed += new System.EventHandler(this.comboBox1_DropDownClosed);
             this.comboBox1.Click += new System.EventHandler(this.comboBox1_Click);
             // 
             // buttonEqualizer

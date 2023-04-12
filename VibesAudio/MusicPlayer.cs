@@ -1,10 +1,11 @@
-﻿using System;
-using System.ComponentModel;
-using CSCore;
+﻿using CSCore;
 using CSCore.Codecs;
 using CSCore.CoreAudioAPI;
 using CSCore.SoundOut;
 using CSCore.Streams.Effects;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace VibesAudio
 {
@@ -24,9 +25,30 @@ namespace VibesAudio
                 return PlaybackState.Stopped;
             }
         }
+        public IEnumerable<MMDevice> EnumerateWasapiDevices()
+        {
+            using (MMDeviceEnumerator enumerator = new MMDeviceEnumerator())
+            {
+                return enumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active);
+            }
+        }
+        public static MMDevice GetDefaultSoundDevice()
+        {
+            using (var enumerator = new MMDeviceEnumerator())
+            {
+                return enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+            }
+        }
+        public static MMDevice GetSoundDevice(string id)
+        {
+            using (var enumerator = new MMDeviceEnumerator())
+            {
+                return enumerator.GetDevice(id);
+            }
+        }
         public ISoundOut getSoundOut()
         {
-            return _soundOut;   
+            return _soundOut;
         }
         public TimeSpan Position
         {
@@ -38,8 +60,7 @@ namespace VibesAudio
             }
             set
             {
-                if (_waveSource != null)
-                    _waveSource.SetPosition(value);
+                _waveSource?.SetPosition(value);
             }
         }
 
@@ -88,8 +109,7 @@ namespace VibesAudio
 
         public void Play()
         {
-            if (_soundOut != null)
-                _soundOut.Play();
+            _soundOut?.Play();
         }
         public Equalizer GetEqualizer()
         {
@@ -97,8 +117,7 @@ namespace VibesAudio
         }
         public void Pause()
         {
-            if (_soundOut != null)
-                _soundOut.Pause();
+            _soundOut?.Pause();
         }
 
         public void Stop()
@@ -108,7 +127,7 @@ namespace VibesAudio
                 _soundOut.Stop();
                 _waveSource.SetPosition(TimeSpan.Zero);
             }
-                
+
         }
 
         private void CleanupPlayback()
@@ -128,8 +147,7 @@ namespace VibesAudio
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            if (_equalizer!=null)
-            _equalizer.Dispose();
+            _equalizer?.Dispose();
             CleanupPlayback();
         }
     }

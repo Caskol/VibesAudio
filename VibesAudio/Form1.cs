@@ -1,38 +1,31 @@
-﻿using System;
+﻿using CSCore.Codecs;
+using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.IO;
-using CSCore;
-using CSCore.Codecs;
-using CSCore.CoreAudioAPI;
-using CSCore.SoundOut;
-using CSCore.Streams.Effects;
-using TagLib;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace VibesAudio
 {
     public partial class Form1 : Form
     {
         private MusicPlayer _musicPlayer = new MusicPlayer();//создание объекта музыкального плеера
-        private readonly ObservableCollection<MMDevice> _devices = new ObservableCollection<MMDevice>();//создание списка устройств вывода
+        //private readonly ObservableCollection<MMDevice> _devices = new ObservableCollection<MMDevice>();//создание списка устройств вывода
+        (Dictionary<string, List<string>>, string) devices;
         private bool _isPlaying;//проверка на проигрывание аудио
-        private bool _expanded=true; //проверка на раскрытие меню
-        private bool muted=false;
+        private bool _expanded = true; //проверка на раскрытие меню
+        private bool muted = false;
         private int lastVolume;
         private bool stopUpdate;
         private int length; //переменная для хранения длительности трека в секундах
-        private bool repeat=false;
+        int deviceIndexChanged = 0;
+        private bool repeat = false;
+        private string fileName;
         EQ equalizerWindow;
         public Form1()
         {
-            InitializeComponent();   
+            InitializeComponent();
         }
         private void PlayOrPause()
         {
@@ -55,22 +48,36 @@ namespace VibesAudio
                 _isPlaying = true;
             }
         }
+        private (Dictionary<string, List<string>>, string) GetAudioDevices()
+        {
+            var devices = new Dictionary<string, List<string>>();
+
+            // Retrieve all active audio devices
+            foreach (var dev in _musicPlayer.EnumerateWasapiDevices())
+            {
+                if (!devices.ContainsKey(dev.FriendlyName))
+                {
+                    devices.Add(dev.FriendlyName, new List<string>());
+                }
+                // Dictionary holds device's friendly names as keys and IDs as values
+                devices[dev.FriendlyName].Add(dev.DeviceID.ToString());
+            }
+
+            // get the default audio endpoint
+            string defaultDeviceName = MusicPlayer.GetDefaultSoundDevice().FriendlyName;
+            return (devices, defaultDeviceName);
+        }
         private void Form1_Load(object sender, EventArgs e)
         {
-            using (var mmdeviceEnumerator = new MMDeviceEnumerator())//получаем сведения об аудиоустройствах в компьютере
+            devices = GetAudioDevices();
+            foreach (var device in devices.Item1)
             {
-                using (
-                    var mmdeviceCollection = mmdeviceEnumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active))
-                {
-                    foreach (var device in mmdeviceCollection)
-                    {
-                        _devices.Add(device);
-                    }
-                }
+                comboBox1.Items.Add(device.Key);
             }
-            comboBox1.DataSource = _devices;
-            comboBox1.DisplayMember = "FriendlyName";
-            comboBox1.ValueMember = "DeviceID";
+
+            // Set the initial selected index based on the default audio endpoint
+            comboBox1.SelectedIndex = comboBox1.FindStringExact(devices.Item2);
+
             labelVolume.Text = trackBarVolume.Value.ToString();
         }
 
@@ -90,8 +97,8 @@ namespace VibesAudio
             {
                 panel2.Visible = true;
             }
-            buttonPlayPause.Location = new Point(trackBarMusicPos.Width / 2 - buttonPlayPause.Width / 2,buttonPlayPause.Location.Y);
-            buttonStop.Location = new Point(buttonPlayPause.Location.X - buttonStop.Width-6, buttonStop.Location.Y);
+            buttonPlayPause.Location = new Point(trackBarMusicPos.Width / 2 - buttonPlayPause.Width / 2, buttonPlayPause.Location.Y);
+            buttonStop.Location = new Point(buttonPlayPause.Location.X - buttonStop.Width - 6, buttonStop.Location.Y);
             buttonRepeat.Location = new Point(buttonPlayPause.Location.X + buttonPlayPause.Width + 6, buttonStop.Location.Y);
             labelMaxPos.Location = new Point(trackBarMusicPos.Width - 50, labelMaxPos.Location.Y);
         }
@@ -128,8 +135,7 @@ namespace VibesAudio
 
         private void buttonPlayer_Click(object sender, EventArgs e)
         {
-            if (equalizerWindow != null)
-                equalizerWindow.Close();
+            equalizerWindow?.Close();
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
                 Filter = CodecFactory.SupportedFilesFilterEn
@@ -138,38 +144,50 @@ namespace VibesAudio
             {
                 try
                 {
-                    _musicPlayer.Open(openFileDialog.FileName, (MMDevice)comboBox1.SelectedItem); //открываем звуковую дорожку
-                    labelNaming.Text = Path.GetFileName(openFileDialog.FileName);
-                    this.Text = "VibesAudio: " + Path.GetFileName(openFileDialog.FileName);
-                    try
+                    List<string> deviceId;
+                    fileName = openFileDialog.FileName;
+                    string selectedDeviceName = comboBox1.SelectedItem.ToString();
+                    if (devices.Item1.ContainsKey(selectedDeviceName))
                     {
-                        TagLib.File file_TAG = TagLib.File.Create(openFileDialog.FileName);
-                        if (file_TAG.Tag.Pictures.Length >= 1)
+                        deviceId = devices.Item1[selectedDeviceName];
+                        if (deviceId.Count > 0)
                         {
-                            var bin = (byte[])(file_TAG.Tag.Pictures[0].Data.Data);
-                            Image image = Image.FromStream(new MemoryStream(bin));
-                            panelCover.BackgroundImage = image;
+                            // Set the default device to a new device based on its device ID 
+                            var currentDevice = MusicPlayer.GetSoundDevice(deviceId.First());
+                            _musicPlayer.Open(fileName, currentDevice); //открываем звуковую дорожку
                         }
+                        labelNaming.Text = Path.GetFileName(fileName);
+                        this.Text = "VibesAudio: " + Path.GetFileName(fileName);
+                        try
+                        {
+                            TagLib.File file_TAG = TagLib.File.Create(fileName);
+                            if (file_TAG.Tag.Pictures.Length >= 1)
+                            {
+                                var bin = (byte[])(file_TAG.Tag.Pictures[0].Data.Data);
+                                Image image = Image.FromStream(new MemoryStream(bin));
+                                panelCover.BackgroundImage = image;
+                            }
+                            else
+                            {
+                                panelCover.BackgroundImage = Properties.Resources.nocover;
+                            }
+                        }
+                        catch (Exception ex) { MessageBox.Show("Возникла непредвиденная ошибка: " + ex.Message); }
+                        if (!muted)
+                            _musicPlayer.Volume = trackBarVolume.Value;
                         else
-                        {
-                            panelCover.BackgroundImage = Properties.Resources.nocover;
-                        }
+                            _musicPlayer.Volume = 0;
+                        buttonPlayPause.BackgroundImage = Properties.Resources.pause;
+                        buttonPlayPause.Enabled = true;
+                        buttonStop.Enabled = true;
+                        buttonPlayPause.BackgroundImage = Properties.Resources.pause;
+                        buttonPlayPause.Enabled = true;
+                        buttonStop.Enabled = true;
+                        length = (int)_musicPlayer.Length.TotalSeconds;
+                        _isPlaying = false;
+                        PlayOrPause();
+                        labelMaxPos.Text = length.ToString();
                     }
-                    catch (Exception ex) { MessageBox.Show("Возникла непредвиденная ошибка: " + ex.Message); }
-                    if (!muted)
-                        _musicPlayer.Volume = trackBarVolume.Value;
-                    else
-                        _musicPlayer.Volume = 0;
-                    buttonPlayPause.BackgroundImage = Properties.Resources.pause;
-                    buttonPlayPause.Enabled = true;
-                    buttonStop.Enabled = true;
-                    buttonPlayPause.BackgroundImage = Properties.Resources.pause;
-                    buttonPlayPause.Enabled = true;
-                    buttonStop.Enabled = true;
-                    length = (int)_musicPlayer.Length.TotalSeconds;
-                    _isPlaying = false;
-                    PlayOrPause();
-                    labelMaxPos.Text = length.ToString();
                 }
                 catch (Exception ex)
                 {
@@ -180,7 +198,7 @@ namespace VibesAudio
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            
+
             if (trackBarMusicPos.Value == length && !repeat)
             {
                 _isPlaying = false;
@@ -239,12 +257,22 @@ namespace VibesAudio
 
         private void Form1_DragDrop(object sender, DragEventArgs e)
         {
-            if (equalizerWindow != null)
-                equalizerWindow.Close();
+            equalizerWindow?.Close();
             string[] fileData = (string[])e.Data.GetData(DataFormats.FileDrop); //Получаем информацию о файле при Drag & Drop
             try
             {
-                _musicPlayer.Open(fileData[0], (MMDevice)comboBox1.SelectedItem);
+                List<string> deviceId;
+                string selectedDeviceName = comboBox1.SelectedItem.ToString();
+                if (devices.Item1.ContainsKey(selectedDeviceName))
+                {
+                    deviceId = devices.Item1[selectedDeviceName];
+                    if (deviceId.Count > 0)
+                    {
+                        // Set the default device to a new device based on its device ID 
+                        var currentDevice = MusicPlayer.GetSoundDevice(deviceId.First());
+                        _musicPlayer.Open(fileData[0], currentDevice); //открываем звуковую дорожку
+                    }
+                }
                 labelNaming.Text = Path.GetFileName(fileData[0]); //показ названия файла в главной панели
                 this.Text = "VibesAudio: " + Path.GetFileName(fileData[0]);//показ названия файла в заголовке окна
                 try
@@ -263,7 +291,7 @@ namespace VibesAudio
                 }
                 catch (Exception ex) { MessageBox.Show("Возникла непредвиденная ошибка: " + ex.Message); }
                 if (!muted)
-                    _musicPlayer.Volume=trackBarVolume.Value;
+                    _musicPlayer.Volume = trackBarVolume.Value;
                 else
                     _musicPlayer.Volume = 0;
                 buttonPlayPause.BackgroundImage = Properties.Resources.pause;
@@ -308,17 +336,18 @@ namespace VibesAudio
         {
             if (e.Button == MouseButtons.Left)
                 stopUpdate = false;
+            _musicPlayer.Volume = trackBarVolume.Value;
         }
 
         private void trackBarMusicPos_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
                 stopUpdate = true;
+            _musicPlayer.Volume = 0;
         }
 
         private void trackBarVolume_ValueChanged(object sender, EventArgs e)
         {
-            _musicPlayer.Volume = trackBarVolume.Value;
             muted = false;
             buttonMute.BackgroundImage = Properties.Resources.mute;
             labelVolume.Text = trackBarVolume.Value.ToString();
@@ -330,7 +359,7 @@ namespace VibesAudio
                 buttonRepeat.BackColor = Color.Transparent;
             else
                 buttonRepeat.BackColor = Color.DarkGray;
-            repeat = !repeat;    
+            repeat = !repeat;
         }
 
         private void buttonEqualizer_Click(object sender, EventArgs e)
@@ -338,5 +367,45 @@ namespace VibesAudio
             equalizerWindow = new EQ(_musicPlayer.GetEqualizer());
             equalizerWindow.Show();
         }
+        private void comboBox1_Click(object sender, EventArgs e)
+        {
+            _musicPlayer.Volume = 0;
+            _musicPlayer.Pause();
+        }
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            deviceIndexChanged++;
+            if (deviceIndexChanged > 1) // device index gets changed once before the form loads, so check for this.
+            {
+                List<string> deviceId;
+                string selectedDeviceName = comboBox1.SelectedItem.ToString();
+
+                if (devices.Item1.ContainsKey(selectedDeviceName))
+                {
+                    deviceId = devices.Item1[selectedDeviceName];
+
+                    if (deviceId.Count > 0)
+                    {
+                        // Set the default device to a new device based on its device ID 
+                        var newDefaultDevice = MusicPlayer.GetSoundDevice(deviceId.First());
+
+                        // Get the current position 
+                        TimeSpan currentPosition = _musicPlayer.Position;
+
+                        _musicPlayer.Open(fileName, newDefaultDevice);
+                        _musicPlayer.Position = currentPosition;
+                        _musicPlayer.Volume = trackBarVolume.Value;
+                        _musicPlayer.Play();
+                        this.ActiveControl = null;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("No device IDs found for selected device name.");
+                }
+            }
+        }
     }
 }
+    
+

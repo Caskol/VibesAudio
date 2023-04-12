@@ -135,7 +135,6 @@ namespace VibesAudio
 
         private void buttonPlayer_Click(object sender, EventArgs e)
         {
-
             equalizerWindow?.Close();
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
@@ -376,7 +375,7 @@ namespace VibesAudio
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             deviceIndexChanged++;
-            if (deviceIndexChanged > 2) // device index gets changed once before the form loads, so check for this.
+            if (deviceIndexChanged > 1) // device index gets changed once before the form loads, so check for this.
             {
                 List<string> deviceId;
                 string selectedDeviceName = comboBox1.SelectedItem.ToString();

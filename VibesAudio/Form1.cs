@@ -371,6 +371,7 @@ namespace VibesAudio
         private void comboBox1_Click(object sender, EventArgs e)
         {
             _musicPlayer.Volume = 0;
+            _musicPlayer.Pause();
         }
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {

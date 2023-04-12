@@ -254,6 +254,7 @@
             this.trackBarVolume.TabIndex = 12;
             this.trackBarVolume.TickStyle = System.Windows.Forms.TickStyle.None;
             this.trackBarVolume.Value = 100;
+            this.trackBarVolume.Scroll += new System.EventHandler(this.trackBarVolume_Scroll);
             this.trackBarVolume.ValueChanged += new System.EventHandler(this.trackBarVolume_ValueChanged);
             // 
             // labelMaxPos

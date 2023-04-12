@@ -421,6 +421,11 @@ namespace VibesAudio
         {
             PlayOrPause();
         }
+
+        private void trackBarVolume_Scroll(object sender, EventArgs e)
+        {
+            _musicPlayer.Volume = trackBarVolume.Value;
+        }
     }
 }
     

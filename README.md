@@ -10,11 +10,11 @@ Supports All types of audio files, that supported by CSCore. Includes TagLib lib
 
 ## Run-time Screenshots
 ### Form Load
- ![Form Load](https://github.com/mcworkaholic/VibesAudio-P1/blob/master/VibesAudio/img/formload.png)
+ ![Form Load](https://github.com/caskol/VibesAudio/blob/master/VibesAudio/img/formload.png)
 
 
 ### After track selection
-![After track Selection](https://github.com/mcworkaholic/VibesAudio-P1/blob/master/VibesAudio/img/afterselection.png)
+![After track Selection](https://github.com/caskol/VibesAudio/blob/master/VibesAudio/img/afterselection.png)
 
 ### Equalizer
-![Equalizer](https://github.com/mcworkaholic/VibesAudio-P1/blob/master/VibesAudio/img/equalizer.png)
+![Equalizer](https://github.com/caskol/VibesAudio/blob/master/VibesAudio/img/equalizer.png)
